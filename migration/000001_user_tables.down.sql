@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS coin_users;
+
+DROP TABLE IF EXISTS coins;
+
+DROP TABLE IF EXISTS users;
