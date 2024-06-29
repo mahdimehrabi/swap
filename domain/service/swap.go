@@ -4,9 +4,12 @@ import (
 	models "bbdk/domain/entity"
 	"bbdk/domain/repository/coin_price"
 	transactionRepo "bbdk/domain/repository/transaction"
+	"bbdk/domain/repository/user"
 	logger "bbdk/infrastructure/log"
 	"context"
 	"errors"
+	"math"
+	"math/big"
 	"time"
 )
 
@@ -17,12 +20,15 @@ type TransactionService interface {
 type transactionService struct {
 	transactionRepo transactionRepo.Repository
 	cpr             coin_price.Repository
+	userRepository  user.Repository
 	logger          logger.Logger
 }
 
 // NewTransactionService creates a new instance of TransactionService
-func NewTransactionService(transactionRepo transactionRepo.Repository, cpr coin_price.Repository, logger logger.Logger) TransactionService {
-	return &transactionService{transactionRepo: transactionRepo, logger: logger, cpr: cpr}
+func NewTransactionService(transactionRepo transactionRepo.Repository, cpr coin_price.Repository,
+	logger logger.Logger, userRepo user.Repository) TransactionService {
+	return &transactionService{transactionRepo: transactionRepo,
+		logger: logger, cpr: cpr, userRepository: userRepo}
 }
 
 func (t transactionService) CreateTransaction(ctx context.Context, user *models.User,
@@ -44,15 +50,18 @@ func (t transactionService) CreateTransaction(ctx context.Context, user *models.
 
 		return nil, errors.New("prices are not up to date")
 	}
-
 	transaction.SrcCoinPrice = srcCoin.USDPrice
+	transaction.SrcCoinP.I = srcCoin.I
 	transaction.DestCoinPrice = destCoin.USDPrice
-	if err := transaction.SrcCoin.FromIntString(srcCoin.USDPrice); err != nil {
-		return nil, err
-	}
-	if err := transaction.DestCoin.FromIntString(destCoin.USDPrice); err != nil {
-		return nil, err
-	}
+	transaction.DestCoinP.I = destCoin.I
+
+	price := big.NewFloat(transaction.SrcCoinP.ToFloat())
+	temp := big.NewFloat(transaction.SrcCoinP.ToFloat())
+	price = price.Quo(price, temp)
+	temp = temp.SetFloat64(transaction.SrcCoinA.ToFloat())
+	destAmount := price.Mul(price, temp)
+	destAmount = destAmount.Mul(destAmount, big.NewFloat(math.Pow10(18)))
+	destAmount.Int(transaction.DestCoinA.I)
 
 	if err := t.transactionRepo.CreateTransaction(ctx, transaction); err != nil {
 		t.logger.Errorf("failed to create transaction %s", err.Error())
@@ -62,7 +71,17 @@ func (t transactionService) CreateTransaction(ctx context.Context, user *models.
 }
 
 func (t transactionService) CommitTransaction(ctx context.Context, transaction *models.Transaction) error {
-
-	//TODO implement me
-	panic("implement me")
+	panic("not implemented")
+	//	transaction, err := t.transactionRepo.GetTransaction(ctx, transaction.ID)
+	//	if err != nil {
+	//		if errors.Is(err, transactionRepo.ErrNotFound) {
+	//			return err
+	//		}
+	//		t.logger.Errorf("failed to get transaction err:%s", err.Error())
+	//		return err
+	//	}
+	//	price := transaction.SrcCoinP.I.Int64() / transaction.DestCoinP.I
+	//	coinSrc := models.NewCoinUser(transaction.SrcCoinID, transaction.UserID)
+	//
+	//	return nil
 }

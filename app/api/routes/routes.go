@@ -32,7 +32,7 @@ func CreateRouters(env *godotenv.Env, logger logger.Logger) []Router {
 	tranRepo := redisTran.NewTransactionRepository(rdb)
 	coinRedisRepo := coinRedis.NewCoinRepository(rdb)
 
-	tranService := service.NewTransactionService(tranRepo, coinRedisRepo, logger)
+	tranService := service.NewTransactionService(tranRepo, coinRedisRepo, logger, userRepo)
 
 	return []Router{NewUserRouter(userService), NewSwapRouter(tranService)}
 }

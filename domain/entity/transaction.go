@@ -9,15 +9,19 @@ import (
 
 // only redis
 type Transaction struct {
-	ID            uuid.UUID     `json:"ID"`
-	CreatedAt     uint64        `json:"createdAt"` //the transaction would be accepted after one minute duration of this time
-	DestCoinID    uint          `json:"destCoinID"`
-	SrcCoinID     uint          `json:"srcCoinID"`
-	UserID        uint          `json:"userID"`
-	SrcCoinPrice  string        `json:"srcCoinPrice"`
-	DestCoinPrice string        `json:"destCoinPrice"`
-	SrcCoin       *currency.USD `json:"-"`
-	DestCoin      *currency.USD `json:"-"`
+	ID             uuid.UUID        `json:"ID"`
+	CreatedAt      uint64           `json:"createdAt"` //the transaction would be accepted after one minute duration of this time
+	DestCoinID     uint             `json:"destCoinID"`
+	SrcCoinID      uint             `json:"srcCoinID"`
+	UserID         uint             `json:"userID"`
+	SrcCoinPrice   string           `json:"srcCoinPrice"`
+	DestCoinPrice  string           `json:"destCoinPrice"`
+	SrcCoinP       *currency.USD    `json:"-"`
+	DestCoinP      *currency.USD    `json:"-"`
+	SrcCoinAmount  string           `json:"srcCoinAmount"`
+	DestCoinAmount string           `json:"destCoinAmount"`
+	SrcCoinA       *currency.Crypto `json:"-"`
+	DestCoinA      *currency.Crypto `json:"-"`
 }
 
 func NewTransaction(userID uint, srcCoinID uint, destCoinID uint) *Transaction {
@@ -26,8 +30,10 @@ func NewTransaction(userID uint, srcCoinID uint, destCoinID uint) *Transaction {
 		SrcCoinID:  srcCoinID,
 		DestCoinID: destCoinID,
 		UserID:     userID,
-		SrcCoin:    currency.NewUSD(),
-		DestCoin:   currency.NewUSD(),
+		SrcCoinP:   currency.NewUSD(),
+		DestCoinP:  currency.NewUSD(),
+		SrcCoinA:   currency.NewCrypto(),
+		DestCoinA:  currency.NewCrypto(),
 		ID:         uuid.New(),
 	}
 	return t

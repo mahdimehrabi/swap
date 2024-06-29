@@ -29,21 +29,32 @@ func (r *UserRepository) DepositCrypto(coinUser *entity.CoinUser) error {
 	})
 }
 
-func (r *UserRepository) WithdrawCrypto(coinUser *entity.CoinUser) error {
+func (r *UserRepository) Swap(coinSrc *entity.CoinUser, coinDest *entity.CoinUser) error {
 	//there is a faster way directly using sql without ORM
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		//transaction to handle race condition
-		currentCUser := entity.NewCoinUser(coinUser.CoinID, coinUser.UserID)
-		if err := tx.Find(currentCUser).Error; err != nil {
+		currentSrc := entity.NewCoinUser(coinSrc.CoinID, coinSrc.UserID)
+		if err := tx.Find(currentSrc).Error; err != nil {
 			return err
 		}
-		coinUser.I.Sub(coinUser.I, currentCUser.I)
-		if coinUser.I.Int64() < 0 {
-			// not enough balance
+
+		coinSrc.I.Sub(coinSrc.I, currentSrc.I)
+		if coinSrc.I.Int64() < 0 {
 			return userRepo.ErrNotEnoughBalance
 		}
-		coinUser.UpdateAmount()
-		if err := tx.Save(coinUser).Error; err != nil {
+
+		if err := tx.Save(coinSrc).Error; err != nil {
+			return err
+		}
+
+		currentDest := entity.NewCoinUser(coinDest.CoinID, coinDest.UserID)
+		if err := tx.Find(currentDest).Error; err != nil {
+			return err
+		}
+
+		coinDest.I.Add(coinDest.I, currentDest.I)
+
+		if err := tx.Save(coinDest).Error; err != nil {
 			return err
 		}
 		return nil

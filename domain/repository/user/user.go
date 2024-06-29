@@ -17,6 +17,6 @@ type Repository interface {
 	UpdateUser(user *entity.User) error
 	DeleteUser(id uint) error
 	GetAll(offset, limit int) ([]*entity.User, error)
-	DepositCrypto(cu *entity.CoinUser) error
-	WithdrawCrypto(cu *entity.CoinUser) error
+	Swap(coinSrc *entity.CoinUser, dest *entity.CoinUser) error
+	DepositCrypto(coinUser *entity.CoinUser) error
 }

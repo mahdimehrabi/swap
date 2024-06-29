@@ -46,7 +46,7 @@ func (c *coinPrice) Start() {
 func (c *coinPrice) allocator() {
 	for {
 		//add coin update price task for each coin to queue every 5 sec
-		time.Sleep(3 * time.Second)
+		time.Sleep(17 * time.Second)
 		coins, err := c.coinRepository.GetAll()
 		if err != nil {
 			c.logger.Errorf("err getting coins %s", err.Error())
