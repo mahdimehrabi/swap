@@ -72,7 +72,7 @@ func (uc *SwapController) CreateTransaction(c *gin.Context) {
 
 func (uc *SwapController) CommitTransaction(c *gin.Context) {
 	id := c.Param("id")
-	uuID, err := uuid.FromBytes([]byte(id))
+	uuID, err := uuid.Parse(id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid transaction ID"})
 		return

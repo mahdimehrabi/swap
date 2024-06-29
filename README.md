@@ -44,7 +44,7 @@ curl -X POST http://localhost:8080/swap/:userID/:srcCoinID/:destCoinID
 
 Commit a transaction:
 ```sh
-curl -X POST http://localhost:8080/swap/:transactionUUID/commit
+curl -X POST  curl -X POST http://localhost:8080/swap/commit/:transactionUUID
 ```
 
 ### User Management
