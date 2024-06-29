@@ -1,45 +1,57 @@
-## Setup 
-```
-cp env.example .env
-```
-config environment variables in .env 
+# Project Setup and Documentation
 
-run migrations
-```
-make db-migrate-up
-```
+## Setup
 
-run seeder
-```
- make db-seed
-```
-### Extra features
-### Used in memory db (redis) for storing prices
-### Used cassandra db for best scalability because our entities do not have a complex relational
-### Created arbitrary precision currency types for strong currency values and avoid floating point inaccuracies
-### Implemented worker pool for getting price from API on the background along with rate limiter
-### Seeder 
-### Error for swap event if a token price is not updated recently
+1. Copy the example environment variables file and configure your environment variables:
+   ```sh
+   cp env.example .env
+   ```
 
-### Please consider
-#### I know ORM has negative effect on performance, but I think for test project ORM is good enough.
+2. Run the database migrations:
+   ```sh
+   make db-migrate-up
+   ```
 
+3. Seed the database:
+   ```sh
+   make db-seed
+   ```
 
-## REST API Doc (I wanted to implement swagger too, but I changed my mind because I hadn't enough time on the weekend🥴 )
-### Swap (get price)
-create transaction and get prices
-```
+## Features
+
+- **In-Memory Database**: Uses Redis for storing prices for fast access.
+- **Cassandra Database**: Utilized for its scalability, suitable for non-complex relational data.
+- **Arbitrary Precision Currency Types**: Created to ensure strong currency values and avoid floating point inaccuracies.
+- **Worker Pool**: Implemented for fetching prices from the API in the background, including a rate limiter.
+- **Error Handling**: Raises errors if a token price is not updated recently during a swap event.
+
+## Considerations
+
+- While ORMs can negatively impact performance, they are adequate for a test project.
+
+## REST API Documentation
+
+(Note: Swagger documentation was intended but could not be completed due to time constraints.)
+
+### Swap (Get Price)
+
+Create a transaction and get prices:
+```sh
 curl -X POST http://localhost:8080/swap/:userID/:srcCoinID/:destCoinID
-``` 
-### Commit swap 
 ```
+
+### Commit Swap
+
+Commit a transaction:
+```sh
 curl -X POST http://localhost:8080/swap/:transactionUUID/commit
 ```
 
+### User Management
 
-### User
-Create User 
-```
+#### Create User
+
+```sh
 curl -X POST http://localhost:8080/users \
     -H "Content-Type: application/json" \
     -d '{
@@ -49,15 +61,15 @@ curl -X POST http://localhost:8080/users \
     }'
 ```
 
-Get user with ID 
+#### Get User by ID
 
-```
+```sh
 curl -X GET http://localhost:8080/users/1
 ```
 
+#### Update User by ID
 
-Update user with id 
-```
+```sh
 curl -X PUT http://localhost:8080/users/1 \
     -H "Content-Type: application/json" \
     -d '{
@@ -67,14 +79,14 @@ curl -X PUT http://localhost:8080/users/1 \
     }'
 ```
 
+#### Delete User by ID
 
-Delete User with id
-```
+```sh
 curl -X DELETE http://localhost:8080/users/1
 ```
 
+#### Get Users with Pagination
 
-Get users with pagination 
-```
+```sh
 curl -X GET "http://localhost:8080/users?page=1&pageSize=10"
 ```
