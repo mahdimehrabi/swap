@@ -20,10 +20,9 @@
 ## Features
 
 - **In-Memory Database**: Uses Redis for storing prices for fast access.
-- **Cassandra Database**: Utilized for its scalability, suitable for non-complex relational data.
 - **Arbitrary Precision Currency Types**: Created to ensure strong currency values and avoid floating point inaccuracies.
 - **Worker Pool**: Implemented for fetching prices from the API in the background, including a rate limiter.
-- **Error Handling**: Raises errors if a token price is not updated recently during a swap event.
+- **Error Handling**: Raises errors if a token price is not updated recently or not enough balance or transaction expired(created more than one minute ago) during a swap event.
 
 ## Considerations
 
