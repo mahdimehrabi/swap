@@ -44,5 +44,26 @@ func (t *Transaction) MarshalBinary() (data []byte, err error) {
 }
 
 func (t *Transaction) UnmarshalBinary(data []byte) error {
-	return json.Unmarshal(data, t)
+	if err := json.Unmarshal(data, t); err != nil {
+		return err
+	}
+	t.SrcCoinP = currency.NewUSD()
+	t.DestCoinP = currency.NewUSD()
+	t.SrcCoinA = currency.NewCrypto()
+	t.DestCoinA = currency.NewCrypto()
+	if err := t.SrcCoinP.FromIntString(t.SrcCoinPrice); err != nil {
+		return err
+	}
+
+	if err := t.DestCoinP.FromIntString(t.DestCoinPrice); err != nil {
+		return err
+	}
+
+	if err := t.SrcCoinA.FromIntString(t.SrcCoinAmount); err != nil {
+		return err
+	}
+	if err := t.DestCoinA.FromIntString(t.DestCoinAmount); err != nil {
+		return err
+	}
+	return nil
 }

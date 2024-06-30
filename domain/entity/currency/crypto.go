@@ -1,6 +1,9 @@
 package currency
 
-import "math/big"
+import (
+	"math"
+	"math/big"
+)
 
 type Crypto struct {
 	*Currency
@@ -10,7 +13,7 @@ func NewCrypto() *Crypto {
 	return &Crypto{
 		Currency: &Currency{
 			I:                  new(big.Int),
-			decimalPlaceNumber: 18,
+			decimalPlaceNumber: math.Pow10(18),
 		},
 	}
 }

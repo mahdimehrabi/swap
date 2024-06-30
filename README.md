@@ -37,14 +37,18 @@
 
 Create a transaction and get prices:
 ```sh
-curl -X POST http://localhost:8080/swap/:userID/:srcCoinID/:destCoinID
+curl -X POST -d '{
+"destCoinID":5,
+"srcCoinID":1,
+"userID":1,
+"srcCoinAmount":3
+}' http://localhost:8080/swap```
 ```
-
 ### Commit Swap
 
 Commit a transaction:
-```sh
-curl -X POST  curl -X POST http://localhost:8080/swap/commit/:transactionUUID
+``` sh
+curl -X POST http://localhost:8080/swap/:uuid/commit
 ```
 
 ### User Management

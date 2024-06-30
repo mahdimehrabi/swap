@@ -4,8 +4,10 @@ import (
 	"bbdk/domain/entity"
 	userRepo "bbdk/domain/repository/user"
 	"errors"
+	"fmt"
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
+	"math/big"
 )
 
 type UserRepository struct {
@@ -29,36 +31,47 @@ func (r *UserRepository) DepositCrypto(coinUser *entity.CoinUser) error {
 	})
 }
 
-func (r *UserRepository) Swap(coinSrc *entity.CoinUser, coinDest *entity.CoinUser) error {
+func (r *UserRepository) Swap(transaction *entity.Transaction) (*entity.CoinUser, *entity.CoinUser, error) {
+	currentSrc := entity.NewCoinUser(transaction.SrcCoinID, transaction.UserID)
+	currentDest := entity.NewCoinUser(transaction.DestCoinID, transaction.UserID)
+
 	//there is a faster way directly using sql without ORM
-	return r.db.Transaction(func(tx *gorm.DB) error {
+	err := r.db.Transaction(func(tx *gorm.DB) error {
 		//transaction to handle race condition
-		currentSrc := entity.NewCoinUser(coinSrc.CoinID, coinSrc.UserID)
 		if err := tx.Find(currentSrc).Error; err != nil {
 			return err
 		}
-
-		coinSrc.I.Sub(coinSrc.I, currentSrc.I)
-		if coinSrc.I.Int64() < 0 {
-			return userRepo.ErrNotEnoughBalance
-		}
-
-		if err := tx.Save(coinSrc).Error; err != nil {
+		if err := currentSrc.FromIntString(currentSrc.Amount); err != nil {
 			return err
 		}
 
-		currentDest := entity.NewCoinUser(coinDest.CoinID, coinDest.UserID)
+		currentSrc.I.Sub(currentSrc.I, transaction.SrcCoinA.I)
+		fmt.Println(currentSrc.I, transaction.SrcCoinA.I)
+		if currentSrc.I.Cmp(big.NewInt(0)) == -1 {
+			return userRepo.ErrNotEnoughBalance
+		}
+		currentSrc.Amount = currentSrc.I.String()
+
+		if err := tx.Save(currentSrc).Error; err != nil {
+			return err
+		}
+
 		if err := tx.Find(currentDest).Error; err != nil {
 			return err
 		}
+		if err := currentDest.FromIntString(currentDest.Amount); err != nil {
+			return err
+		}
 
-		coinDest.I.Add(coinDest.I, currentDest.I)
+		currentDest.I.Add(transaction.DestCoinA.I, currentDest.I)
+		currentDest.Amount = currentDest.I.String()
 
-		if err := tx.Save(coinDest).Error; err != nil {
+		if err := tx.Save(currentDest).Error; err != nil {
 			return err
 		}
 		return nil
 	})
+	return currentSrc, currentDest, err
 }
 
 // NewUserRepository creates a new instance of UserRepository

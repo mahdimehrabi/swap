@@ -16,7 +16,7 @@ import (
 type TransactionService interface {
 	CreateTransaction(ctx context.Context, user *models.User,
 		srcCoin *models.Coin, destCoin *models.Coin, srcCoinAmount float64) (*models.Transaction, error)
-	CommitTransaction(ctx context.Context, transaction *models.Transaction) error
+	CommitTransaction(ctx context.Context, transaction *models.Transaction) (*models.CoinUser, *models.CoinUser, error)
 }
 type transactionService struct {
 	transactionRepo transactionRepo.Repository
@@ -65,7 +65,6 @@ func (t transactionService) CreateTransaction(ctx context.Context, user *models.
 	destPrice = destPrice.Quo(destPrice, big.NewFloat(math.Pow10(2)))
 
 	wholePrice := srcPrice.Mul(srcPrice, big.NewFloat(transaction.SrcCoinA.ToFloat()))
-
 	destAmount := big.NewFloat(0)
 	destAmount = destAmount.Quo(wholePrice, destPrice)
 	destAmount = destAmount.Mul(destAmount, big.NewFloat(math.Pow10(18)))
@@ -79,18 +78,14 @@ func (t transactionService) CreateTransaction(ctx context.Context, user *models.
 	return transaction, nil
 }
 
-func (t transactionService) CommitTransaction(ctx context.Context, transaction *models.Transaction) error {
-	panic("not implemented")
-	//	transaction, err := t.transactionRepo.GetTransaction(ctx, transaction.ID)
-	//	if err != nil {
-	//		if errors.Is(err, transactionRepo.ErrNotFound) {
-	//			return err
-	//		}
-	//		t.logger.Errorf("failed to get transaction err:%s", err.Error())
-	//		return err
-	//	}
-	//	price := transaction.SrcCoinP.I.Int64() / transaction.DestCoinP.I
-	//	coinSrc := models.NewCoinUser(transaction.SrcCoinID, transaction.UserID)
-	//
-	//	return nil
+func (t transactionService) CommitTransaction(ctx context.Context, transaction *models.Transaction) (*models.CoinUser, *models.CoinUser, error) {
+	transaction, err := t.transactionRepo.GetTransaction(ctx, transaction.ID)
+	if err != nil {
+		if errors.Is(err, transactionRepo.ErrNotFound) {
+			return nil, nil, err
+		}
+		t.logger.Errorf("failed to get transaction err:%s", err.Error())
+		return nil, nil, err
+	}
+	return t.userRepository.Swap(transaction)
 }

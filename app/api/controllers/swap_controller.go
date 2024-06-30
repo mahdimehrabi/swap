@@ -66,8 +66,8 @@ func (uc *SwapController) CommitTransaction(c *gin.Context) {
 	}
 	transaction := entity.NewTransaction(0, 0, 0)
 	transaction.ID = uuID
-
-	if err := uc.tranService.CommitTransaction(context.Background(), transaction); err != nil {
+	srcCoinUser, destCoinUser, err := uc.tranService.CommitTransaction(context.Background(), transaction)
+	if err != nil {
 		if errors.Is(err, user.ErrNotEnoughBalance) {
 			response.Response(c, gin.H{}, http.StatusBadRequest, "not enough balance")
 			return
@@ -77,5 +77,9 @@ func (uc *SwapController) CommitTransaction(c *gin.Context) {
 		}
 		response.InternalServerError(c)
 	}
-	response.Response(c, gin.H{}, http.StatusOK, "transaction completed successfully")
+
+	response.Response(c, gin.H{
+		"userSrcAmount":  srcCoinUser.ToFloat(),
+		"userDestAmount": destCoinUser.ToFloat(),
+	}, http.StatusOK, "transaction completed successfully")
 }
