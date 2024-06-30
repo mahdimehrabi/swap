@@ -14,7 +14,8 @@ import (
 )
 
 type TransactionService interface {
-	CreateTransaction(ctx context.Context, user *models.User, srcCoin *models.Coin, destCoin *models.Coin) (*models.Transaction, error)
+	CreateTransaction(ctx context.Context, user *models.User,
+		srcCoin *models.Coin, destCoin *models.Coin, srcCoinAmount float64) (*models.Transaction, error)
 	CommitTransaction(ctx context.Context, transaction *models.Transaction) error
 }
 type transactionService struct {
@@ -32,7 +33,7 @@ func NewTransactionService(transactionRepo transactionRepo.Repository, cpr coin_
 }
 
 func (t transactionService) CreateTransaction(ctx context.Context, user *models.User,
-	srcCoin *models.Coin, destCoin *models.Coin) (*models.Transaction, error) {
+	srcCoin *models.Coin, destCoin *models.Coin, srcCoinAmount float64) (*models.Transaction, error) {
 	transaction := models.NewTransaction(user.ID, srcCoin.ID, destCoin.ID)
 
 	srcCoin, err := t.cpr.GetCoin(ctx, srcCoin.ID)
@@ -50,18 +51,26 @@ func (t transactionService) CreateTransaction(ctx context.Context, user *models.
 
 		return nil, errors.New("prices are not up to date")
 	}
+	transaction.SrcCoinA.FromFloat(srcCoinAmount)
+	transaction.SrcCoinAmount = transaction.SrcCoinA.ToIntString()
+
 	transaction.SrcCoinPrice = srcCoin.USDPrice
 	transaction.SrcCoinP.I = srcCoin.I
 	transaction.DestCoinPrice = destCoin.USDPrice
 	transaction.DestCoinP.I = destCoin.I
 
-	price := big.NewFloat(transaction.SrcCoinP.ToFloat())
-	temp := big.NewFloat(transaction.SrcCoinP.ToFloat())
-	price = price.Quo(price, temp)
-	temp = temp.SetFloat64(transaction.SrcCoinA.ToFloat())
-	destAmount := price.Mul(price, temp)
+	srcPrice := big.NewFloat(0).SetInt(transaction.SrcCoinP.I)   //10^2 srcPrice
+	destPrice := big.NewFloat(0).SetInt(transaction.DestCoinP.I) // 10^2 dest srcPrice
+	srcPrice = srcPrice.Quo(srcPrice, big.NewFloat(math.Pow10(2)))
+	destPrice = destPrice.Quo(destPrice, big.NewFloat(math.Pow10(2)))
+
+	wholePrice := srcPrice.Mul(srcPrice, big.NewFloat(transaction.SrcCoinA.ToFloat()))
+
+	destAmount := big.NewFloat(0)
+	destAmount = destAmount.Quo(wholePrice, destPrice)
 	destAmount = destAmount.Mul(destAmount, big.NewFloat(math.Pow10(18)))
 	destAmount.Int(transaction.DestCoinA.I)
+	transaction.DestCoinAmount = transaction.DestCoinA.ToIntString()
 
 	if err := t.transactionRepo.CreateTransaction(ctx, transaction); err != nil {
 		t.logger.Errorf("failed to create transaction %s", err.Error())

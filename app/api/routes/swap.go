@@ -17,7 +17,7 @@ func NewSwapRouter(tranService service.TransactionService) *SwapRouter {
 
 func (rh *SwapRouter) SetupRoutes(router *gin.Engine) {
 	//I must implement like /api/v1 but no time :(
-	router.POST("/swap/commit/:id", rh.swapController.CommitTransaction)
-	router.POST("/swap/:userID/:srcCoinID/:destCoinID", rh.swapController.CreateTransaction)
+	router.POST("/swap/:id/commit", rh.swapController.CommitTransaction)
+	router.POST("/swap", rh.swapController.CreateTransaction)
 
 }

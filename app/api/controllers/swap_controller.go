@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"net/http"
-	"strconv"
 )
 
 type SwapController struct {
@@ -25,42 +24,30 @@ func NewSwapController(tranService service.TransactionService) *SwapController {
 }
 
 func (uc *SwapController) CreateTransaction(c *gin.Context) {
-	userID, err := strconv.ParseUint(c.Param("userID"), 10, 64)
-	if err != nil {
+	tranReq := dto.TransactionReq{}
+	if err := c.ShouldBindJSON(&tranReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-		return
-	}
-
-	srcCoinID, err := strconv.ParseUint(c.Param("srcCoinID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid source src ID"})
-		return
-	}
-
-	destCoinID, err := strconv.ParseUint(c.Param("destCoinID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid source dest ID"})
 		return
 	}
 
 	user := &entity.User{
 		Model: gorm.Model{
-			ID: uint(userID),
+			ID: tranReq.UserID,
 		},
 	}
 	srcCoin := &entity.Coin{
 		Model: gorm.Model{
-			ID: uint(srcCoinID),
+			ID: tranReq.SrcCoinID,
 		},
 	}
 
 	destCoin := &entity.Coin{
 		Model: gorm.Model{
-			ID: uint(destCoinID),
+			ID: tranReq.DestCoinID,
 		},
 	}
 
-	trans, err := uc.tranService.CreateTransaction(context.Background(), user, srcCoin, destCoin)
+	trans, err := uc.tranService.CreateTransaction(context.Background(), user, srcCoin, destCoin, tranReq.SrcCoinAmount)
 	if err != nil {
 		response.InternalServerError(c)
 		return

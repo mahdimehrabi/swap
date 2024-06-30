@@ -28,3 +28,10 @@ func (t *Transaction) FromEntity(transaction *entity.Transaction) {
 	t.SrcCoinAmount = transaction.SrcCoinA.ToFloat()
 	t.DestCoinAmount = transaction.DestCoinA.ToFloat()
 }
+
+type TransactionReq struct {
+	DestCoinID    uint    `json:"destCoinID"`
+	SrcCoinID     uint    `json:"srcCoinID"`
+	UserID        uint    `json:"userID"`
+	SrcCoinAmount float64 `json:"srcCoinAmount"`
+}
